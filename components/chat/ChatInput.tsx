@@ -1,4 +1,4 @@
-import { KeyboardEvent } from "react";
+import { KeyboardEvent, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SendHorizontal } from "lucide-react";
@@ -11,30 +11,52 @@ interface ChatInputProps {
 }
 
 export function ChatInput({ value, onChange, onSend, isLoading }: ChatInputProps) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      onSend();
+      if (value.trim() && !isLoading) {
+        onSend();
+      }
     }
   };
 
+  const handleSend = () => {
+    if (value.trim() && !isLoading) {
+      onSend();
+      textareaRef.current?.focus();
+    }
+  };
+
+  // Auto-resize textarea
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+    }
+  }, [value]);
+
   return (
-    <div className="flex gap-2 items-end p-4 border-t">
+    <div className="relative flex items-end gap-2 bg-white rounded-lg border p-2">
       <Textarea
+        ref={textareaRef}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Ask a question..."
-        className="resize-none"
+        placeholder="Message Xuan2..."
+        className="min-h-[44px] w-full resize-none bg-transparent px-2 py-2 focus-visible:ring-0 focus-visible:ring-offset-0 border-0"
         rows={1}
         disabled={isLoading}
       />
-      <Button 
-        onClick={onSend}
+      <Button
+        onClick={handleSend}
         disabled={isLoading || !value.trim()}
         size="icon"
+        className="flex-shrink-0"
       >
-        <SendHorizontal className="h-4 w-4" />
+        <SendHorizontal className="h-5 w-5" />
       </Button>
     </div>
   );
