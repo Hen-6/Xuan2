@@ -9,11 +9,8 @@ type Message = {
   content: string;
 };
 
-const SITE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://hen-6.github.io/Xuan2'
-  : 'http://localhost:3000';
-
-const OPENROUTER_API_KEY = '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';
+const GOOGLE_API_KEY = 'AIzaSyD4FWM5Qwc2giEg9abSfGAVbjL3qfGsybo';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent';
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -30,29 +27,48 @@ export default function Home() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const response = await fetch(`${GEMINI_API_URL}?key=${GOOGLE_API_KEY}`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          'HTTP-Referer': SITE_URL,
-          'X-Title': 'Xuan2 Chat',
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'qwen/qwen2.5-vl-3b-instruct:free',
-          messages: [...messages, userMessage].map(msg => ({
-            role: msg.role,
-            content: [{
-              type: 'text',
+          contents: [...messages, userMessage].map(msg => ({
+            role: msg.role === 'user' ? 'user' : 'model',
+            parts: [{
               text: msg.content
             }]
           })),
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 1000,
+          },
+          safetySettings: [
+            {
+              category: "HARM_CATEGORY_HARASSMENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_HATE_SPEECH",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            }
+          ]
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: { message: 'Failed to parse error response' } }));
-        console.error('OpenRouter API Error:', errorData);
+        console.error('Gemini API Error:', errorData);
         
         let errorMessage = 'Failed to get response from AI service';
         if (response.status === 401) {
@@ -64,19 +80,17 @@ export default function Home() {
         throw new Error(errorMessage);
       }
 
-      const data = await response.json().catch(() => null);
+      const data = await response.json();
       console.log('Received response:', data);
 
-      if (!data?.choices?.[0]?.message?.content) {
+      if (!data?.candidates?.[0]?.content?.parts?.[0]?.text) {
         throw new Error('Invalid response format from AI service');
       }
 
       // Add AI response
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: typeof data.choices[0].message.content === 'string' 
-          ? data.choices[0].message.content
-          : data.choices[0].message.content[0]?.text || 'No response content'
+        content: data.candidates[0].content.parts[0].text
       }]);
     } catch (error) {
       console.error('Error:', error);
