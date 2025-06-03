@@ -9,6 +9,10 @@ type Message = {
   content: string;
 };
 
+const SITE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://hen-6.github.io/Xuan2'
+  : 'http://localhost:3000';
+
 const OPENROUTER_API_KEY = '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';
 
 export default function Home() {
@@ -29,19 +33,20 @@ export default function Home() {
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          'HTTP-Referer': window.location.origin || 'https://hen-6.github.io/Xuan2',
+          'HTTP-Referer': SITE_URL,
           'X-Title': 'Xuan2 Chat',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           model: 'qwen/qwen2.5-vl-3b-instruct:free',
           messages: [...messages, userMessage].map(msg => ({
             role: msg.role,
-            content: msg.content,
+            content: [{
+              type: 'text',
+              text: msg.content
+            }]
           })),
-          temperature: 0.7,
-          max_tokens: 1000,
         }),
       });
 
@@ -69,7 +74,9 @@ export default function Home() {
       // Add AI response
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: data.choices[0].message.content 
+        content: typeof data.choices[0].message.content === 'string' 
+          ? data.choices[0].message.content
+          : data.choices[0].message.content[0]?.text || 'No response content'
       }]);
     } catch (error) {
       console.error('Error:', error);
