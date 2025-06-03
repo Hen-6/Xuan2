@@ -31,7 +31,7 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          'HTTP-Referer': window.location.origin,
+          'HTTP-Referer': window.location.origin || 'https://hen-6.github.io/Xuan2',
           'X-Title': 'Xuan2 Chat',
         },
         body: JSON.stringify({
@@ -46,15 +46,23 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({ error: { message: 'Failed to parse error response' } }));
         console.error('OpenRouter API Error:', errorData);
-        throw new Error(errorData.error?.message || 'Failed to get response');
+        
+        let errorMessage = 'Failed to get response from AI service';
+        if (response.status === 401) {
+          errorMessage = 'Authentication error. Please check the API key configuration.';
+        } else if (errorData.error?.message) {
+          errorMessage = errorData.error.message;
+        }
+        
+        throw new Error(errorMessage);
       }
 
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
       console.log('Received response:', data);
 
-      if (!data.choices?.[0]?.message?.content) {
+      if (!data?.choices?.[0]?.message?.content) {
         throw new Error('Invalid response format from AI service');
       }
 
@@ -68,7 +76,9 @@ export default function Home() {
       // Add error message
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: error instanceof Error ? error.message : 'Sorry, I encountered an error. Please try again.' 
+        content: error instanceof Error 
+          ? `Error: ${error.message}` 
+          : 'Sorry, I encountered an error. Please try again.' 
       }]);
     } finally {
       setIsLoading(false);
