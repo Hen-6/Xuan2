@@ -76,27 +76,29 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 w-full transition-transform duration-300 z-50 ${isHidden ? "-translate-y-full" : "translate-y-0"}`}
+      className={`fixed top-0 left-0 w-full transition-all duration-300 z-50 ${
+        isHidden ? "-translate-y-full" : "translate-y-0"
+      }`}
       style={{
-        height: "80px",
-        background: "linear-gradient(180deg, rgba(0, 0, 0, 0.7), transparent)",
-        // Removed the border-bottom
+        height: "var(--header-height)",
+        background: "linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 60%, transparent 100%)",
       }}
       onMouseEnter={() => setIsHoveringHeader(true)}
       onMouseLeave={() => {
         setIsHoveringHeader(false)
         if (window.scrollY > 50) {
           setIsHidden(true)
-          document.body.style.paddingTop = "20px"
+          // Use CSS variable for consistent spacing
+          document.documentElement.style.setProperty('--content-top-spacing', '20px')
         }
       }}
     >
       <div className="container mx-auto px-4 h-full">
-        <div className="flex items-center justify-between h-full">
-          <Link href="/" className="text-2xl font-bold text-white hover:text-gray-200 transition-colors font-serif">
+        <div className="flex items-center justify-between h-full max-w-7xl mx-auto">
+          <Link href="/" className="text-2xl font-bold text-white hover:text-gray-200 transition-colors font-serif relative z-10">
             Xuan2.org
           </Link>
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-8 relative z-10">
             <ul className="flex gap-8 list-none">
               {navItems.map((item) => (
                 <li key={item.name}>
