@@ -1,63 +1,48 @@
-import { KeyboardEvent, useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { SendHorizontal } from "lucide-react";
+'use client';
+
+import { KeyboardEvent } from 'react';
+import { Send } from 'lucide-react';
 
 interface ChatInputProps {
   value: string;
   onChange: (value: string) => void;
-  onSend: () => void;
+  onSend: (message: string) => void;
   isLoading?: boolean;
 }
 
 export function ChatInput({ value, onChange, onSend, isLoading }: ChatInputProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       if (value.trim() && !isLoading) {
-        onSend();
+        onSend(value);
       }
     }
   };
 
-  const handleSend = () => {
-    if (value.trim() && !isLoading) {
-      onSend();
-      textareaRef.current?.focus();
-    }
-  };
-
-  // Auto-resize textarea
-  useEffect(() => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.style.height = 'auto';
-      textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
-    }
-  }, [value]);
-
   return (
-    <div className="relative flex items-end w-full bg-white rounded-xl border shadow-[0_0_15px_rgba(0,0,0,0.1)] transition-shadow">
-      <Textarea
-        ref={textareaRef}
+    <div className="relative flex items-end gap-2">
+      <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Message Xuan2..."
-        className="min-h-[52px] w-full resize-none bg-transparent py-[1.3rem] pl-4 pr-14 focus-visible:ring-0 focus-visible:ring-offset-0 border-0 shadow-none"
+        placeholder="Ask anything about the Tao..."
+        className="flex-1 resize-none rounded-lg border border-input bg-background px-3 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[80px]"
+        style={{ maxHeight: '200px' }}
         rows={1}
         disabled={isLoading}
       />
-      <Button
-        onClick={handleSend}
-        disabled={isLoading || !value.trim()}
-        size="icon"
-        className="absolute right-2 bottom-2.5 h-8 w-8 bg-black hover:bg-gray-800 text-white rounded-lg disabled:opacity-40 disabled:hover:bg-black"
+      <button
+        onClick={() => {
+          if (value.trim() && !isLoading) {
+            onSend(value);
+          }
+        }}
+        disabled={!value.trim() || isLoading}
+        className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
       >
-        <SendHorizontal className="h-4 w-4" />
-      </Button>
+        <Send className="h-4 w-4" />
+      </button>
     </div>
   );
 } 

@@ -1,49 +1,80 @@
 'use client';
 
+import { useState } from 'react';
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
-import { useChat } from "@/hooks/useChat";
-import { useIsMobile } from "@/hooks/use-mobile";
+
+type Message = {
+  role: 'user' | 'assistant';
+  content: string;
+};
 
 export default function Home() {
-  const { messages, isLoading, input, setInput, sendMessage } = useChat();
-  const isMobile = useIsMobile();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const sendMessage = async (content: string) => {
+    if (!content.trim()) return;
+    
+    // Add user message
+    const userMessage: Message = { role: 'user', content };
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setIsLoading(true);
+
+    try {
+      // Make API call to your AI endpoint
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: [...messages, userMessage],
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response');
+      }
+
+      const data = await response.json();
+      
+      // Add AI response
+      setMessages(prev => [...prev, { role: 'assistant', content: data.message }]);
+    } catch (error) {
+      console.error('Error:', error);
+      // Handle error appropriately
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: 'Sorry, I encountered an error. Please try again.' 
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <div className="flex min-h-screen bg-background">
-      {/* Left sidebar */}
-      <div 
-        className="hidden md:flex flex-col bg-gray-900"
-        style={{ width: 'var(--sidebar-width)' }}
-      >
-        <div className="flex-1">
-          <h1 className="px-4 py-4 text-white font-semibold text-xl">Xuan2</h1>
-        </div>
-      </div>
-
+    <div className="flex flex-col min-h-screen bg-background">
       {/* Main chat area */}
-      <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
-        {/* Mobile header */}
-        <header className="md:hidden border-b border-gray-200 p-4 bg-background/80 backdrop-blur-sm">
-          <h1 className="text-xl font-semibold">Xuan2</h1>
-        </header>
-
+      <div className="flex-1 flex flex-col w-full max-w-4xl mx-auto px-4">
         {/* Messages area */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
+        <div className="flex-1 overflow-y-auto custom-scrollbar py-4 space-y-6">
           {messages.length === 0 ? (
-            <div className="h-full flex items-center justify-center p-4">
-              <div className="text-center space-y-3 max-w-md mx-auto">
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center space-y-3 max-w-md">
                 <h2 className="text-2xl font-semibold">Welcome to Xuan2</h2>
                 <p className="text-muted-foreground">Ask me anything about the Tao...</p>
               </div>
             </div>
           ) : (
-            <div className="divide-y divide-border">
+            <div className="space-y-6">
               {messages.map((message, index) => (
                 <ChatMessage key={index} message={message} />
               ))}
               {isLoading && (
-                <div className="p-8 flex justify-center">
+                <div className="flex justify-center">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
                 </div>
               )}
@@ -52,12 +83,12 @@ export default function Home() {
         </div>
 
         {/* Input area */}
-        <div className="border-t border-border bg-background/80 backdrop-blur-sm">
-          <div className="max-w-3xl mx-auto p-4 md:p-6">
+        <div className="border-t border-border bg-background/80 backdrop-blur-sm py-4">
+          <div className="max-w-3xl mx-auto">
             <ChatInput
               value={input}
               onChange={setInput}
-              onSend={() => sendMessage(input)}
+              onSend={sendMessage}
               isLoading={isLoading}
             />
             <div className="mt-2 text-center text-xs text-muted-foreground">
