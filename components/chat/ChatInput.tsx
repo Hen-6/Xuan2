@@ -11,6 +11,8 @@ interface ChatInputProps {
 }
 
 export function ChatInput({ value, onChange, onSend, isLoading }: ChatInputProps) {
+  const [isPressed, setIsPressed] = useState(false);
+
   const handleSubmit = () => {
     if (value.trim() && !isLoading) {
       onSend(value.trim());
@@ -39,8 +41,13 @@ export function ChatInput({ value, onChange, onSend, isLoading }: ChatInputProps
       />
       <button
         onClick={handleSubmit}
+        onMouseDown={() => setIsPressed(true)}
+        onMouseUp={() => setIsPressed(false)}
+        onMouseLeave={() => setIsPressed(false)}
         disabled={!value.trim() || isLoading}
-        className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-400 disabled:pointer-events-none disabled:opacity-50 bg-black text-white hover:bg-black/90 h-10 px-4 py-2"
+        className={`inline-flex items-center justify-center rounded-md text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-400 disabled:pointer-events-none disabled:opacity-50 bg-black text-white hover:bg-black/90 h-10 px-4 py-2 ${
+          isPressed ? 'transform scale-95 bg-black/80' : ''
+        }`}
       >
         {isLoading ? (
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
