@@ -9,6 +9,8 @@ type Message = {
   content: string;
 };
 
+const OPENROUTER_API_KEY = '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';
+
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -24,37 +26,49 @@ export default function Home() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'Xuan2 Chat',
         },
         body: JSON.stringify({
-          messages: [...messages, userMessage],
+          model: 'qwen/qwen2.5-vl-3b-instruct:free',
+          messages: [...messages, userMessage].map(msg => ({
+            role: msg.role,
+            content: msg.content,
+          })),
+          temperature: 0.7,
+          max_tokens: 1000,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get response');
+        const errorData = await response.json();
+        console.error('OpenRouter API Error:', errorData);
+        throw new Error(errorData.error?.message || 'Failed to get response');
       }
 
       const data = await response.json();
-      
-      if (data.error) {
-        throw new Error(data.error);
+      console.log('Received response:', data);
+
+      if (!data.choices?.[0]?.message?.content) {
+        throw new Error('Invalid response format from AI service');
       }
 
       // Add AI response
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: data.message 
+        content: data.choices[0].message.content 
       }]);
     } catch (error) {
       console.error('Error:', error);
       // Add error message
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: 'Sorry, I encountered an error. Please try again.' 
+        content: error instanceof Error ? error.message : 'Sorry, I encountered an error. Please try again.' 
       }]);
     } finally {
       setIsLoading(false);
