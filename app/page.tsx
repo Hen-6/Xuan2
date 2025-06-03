@@ -15,16 +15,15 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
 
   const sendMessage = async (content: string) => {
-    if (!content.trim()) return;
+    if (!content.trim() || isLoading) return;
     
-    // Add user message
-    const userMessage: Message = { role: 'user', content };
+    // Add user message immediately
+    const userMessage: Message = { role: 'user', content: content.trim() };
     setMessages(prev => [...prev, userMessage]);
-    setInput('');
+    setInput(''); // Clear input
     setIsLoading(true);
 
     try {
-      // Make API call to your AI endpoint
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -41,11 +40,18 @@ export default function Home() {
 
       const data = await response.json();
       
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
       // Add AI response
-      setMessages(prev => [...prev, { role: 'assistant', content: data.message }]);
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: data.message 
+      }]);
     } catch (error) {
       console.error('Error:', error);
-      // Handle error appropriately
+      // Add error message
       setMessages(prev => [...prev, { 
         role: 'assistant', 
         content: 'Sorry, I encountered an error. Please try again.' 
@@ -56,7 +62,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-background pt-[var(--header-height)]">
       {/* Main chat area */}
       <div className="flex-1 flex flex-col w-full max-w-4xl mx-auto px-4">
         {/* Messages area */}
@@ -74,8 +80,8 @@ export default function Home() {
                 <ChatMessage key={index} message={message} />
               ))}
               {isLoading && (
-                <div className="flex justify-center">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+                <div className="flex justify-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent" />
                 </div>
               )}
             </div>
