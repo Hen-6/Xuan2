@@ -39,14 +39,14 @@ export function ChatInput({ value, onChange, onSend, isLoading }: ChatInputProps
   }, [value]);
 
   return (
-    <div className="relative flex items-end gap-2 bg-white rounded-lg border p-2">
+    <div className="relative flex items-end w-full bg-white rounded-xl border shadow-[0_0_15px_rgba(0,0,0,0.1)] transition-shadow">
       <Textarea
         ref={textareaRef}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Message Xuan2..."
-        className="min-h-[44px] w-full resize-none bg-transparent px-2 py-2 focus-visible:ring-0 focus-visible:ring-offset-0 border-0"
+        className="min-h-[52px] w-full resize-none bg-transparent py-[1.3rem] pl-4 pr-14 focus-visible:ring-0 focus-visible:ring-offset-0 border-0 shadow-none"
         rows={1}
         disabled={isLoading}
       />
@@ -54,9 +54,9 @@ export function ChatInput({ value, onChange, onSend, isLoading }: ChatInputProps
         onClick={handleSend}
         disabled={isLoading || !value.trim()}
         size="icon"
-        className="flex-shrink-0"
+        className="absolute right-2 bottom-2.5 h-8 w-8 bg-black hover:bg-gray-800 text-white rounded-lg disabled:opacity-40 disabled:hover:bg-black"
       >
-        <SendHorizontal className="h-5 w-5" />
+        <SendHorizontal className="h-4 w-4" />
       </Button>
     </div>
   );

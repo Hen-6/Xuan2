@@ -1,6 +1,5 @@
 'use client';
 
-import { Card } from "@/components/ui/card";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { useChat } from "@/hooks/useChat";
@@ -9,51 +8,59 @@ export default function Home() {
   const { messages, isLoading, input, setInput, sendMessage } = useChat();
 
   return (
-    <div className="flex flex-col h-screen">
-      {/* Header */}
-      <header className="border-b border-gray-200 py-4 px-6">
-        <h1 className="text-2xl font-serif text-center">Xuan2.org</h1>
-      </header>
+    <div className="flex h-screen bg-white">
+      {/* Left sidebar - can be empty for now */}
+      <div className="hidden md:flex w-[260px] bg-gray-900 flex-col">
+        <div className="flex-1">
+          <h1 className="px-4 py-4 text-white font-semibold text-xl">Xuan2</h1>
+        </div>
+      </div>
 
-      {/* Main Chat Area */}
-      <main className="flex-1 flex flex-col max-w-4xl w-full mx-auto p-4 overflow-hidden">
-        <div className="flex-1 overflow-y-auto space-y-4 mb-4">
+      {/* Main chat area */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
+        {/* Mobile header */}
+        <header className="md:hidden border-b border-gray-200 p-4">
+          <h1 className="text-xl font-semibold">Xuan2</h1>
+        </header>
+
+        {/* Messages area */}
+        <div className="flex-1 overflow-y-auto">
           {messages.length === 0 ? (
             <div className="h-full flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <p className="text-lg">Welcome to Xuan2</p>
-                <p className="text-sm mt-2">Ask me anything about the Tao...</p>
+              <div className="text-center space-y-3 px-4">
+                <h2 className="text-2xl font-semibold">Welcome to Xuan2</h2>
+                <p className="text-gray-600">Ask me anything about the Tao...</p>
               </div>
             </div>
           ) : (
-            messages.map((message, index) => (
-              <ChatMessage key={index} message={message} />
-            ))
-          )}
-          {isLoading && (
-            <div className="flex justify-center">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+            <div className="divide-y divide-gray-100">
+              {messages.map((message, index) => (
+                <ChatMessage key={index} message={message} />
+              ))}
+              {isLoading && (
+                <div className="p-8 flex justify-center">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900" />
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* Chat Input */}
-        <div className="border-t border-gray-200 pt-4">
-          <ChatInput
-            value={input}
-            onChange={setInput}
-            onSend={() => sendMessage(input)}
-            isLoading={isLoading}
-          />
+        {/* Input area */}
+        <div className="border-t border-gray-100 p-4 md:p-6">
+          <div className="max-w-3xl mx-auto">
+            <ChatInput
+              value={input}
+              onChange={setInput}
+              onSend={() => sendMessage(input)}
+              isLoading={isLoading}
+            />
+            <div className="mt-2 text-center text-xs text-gray-400">
+              Built with Next.js and OpenRouter AI
+            </div>
+          </div>
         </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t border-gray-200 py-3 px-6">
-        <p className="text-center text-sm text-gray-500">
-          Built with Next.js and OpenRouter AI
-        </p>
-      </footer>
+      </div>
     </div>
   );
 }
