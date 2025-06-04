@@ -13,7 +13,7 @@ const SITE_URL = process.env.NODE_ENV === 'production'
   ? 'https://hen-6.github.io/Xuan2'
   : 'http://localhost:3000';
 
-const OPENROUTER_API_KEY = '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';
+const OPENROUTER_API_KEY = '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';
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -30,39 +30,32 @@ export default function Home() {
     setIsLoading(true);
 
     try {
-      const headers = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'HTTP-Referer': SITE_URL,
-        'X-Title': 'Xuan2 Chat'
-      };
-
-      console.log('Sending request with headers:', {
-        ...headers,
-        'Authorization': 'Bearer [REDACTED]'
-      });
-
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
-        headers,
+        headers: {
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+          'HTTP-Referer': SITE_URL,
+          'X-Title': 'Xuan2 Chat',
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
           model: 'deepseek/deepseek-r1-0528:free',
           messages: [...messages, userMessage].map(msg => ({
             role: msg.role,
             content: msg.content
-          }))
+          })),
+          temperature: 0.7,
+          max_tokens: 1000
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: { message: 'Failed to parse error response' } }));
         console.error('OpenRouter API Error:', errorData);
-        console.error('Response status:', response.status);
-        console.error('Response headers:', Object.fromEntries(response.headers.entries()));
         
         let errorMessage = 'Failed to get response from AI service';
         if (response.status === 401) {
-          errorMessage = 'Authentication error. Please verify the API key is correct and has sufficient credits.';
+          errorMessage = 'Authentication error. Please check the API key configuration.';
         } else if (errorData.error?.message) {
           errorMessage = errorData.error.message;
         }
