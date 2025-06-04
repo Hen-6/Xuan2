@@ -9,8 +9,11 @@ type Message = {
   content: string;
 };
 
-const GOOGLE_API_KEY = 'AIzaSyD4FWM5Qwc2giEg9abSfGAVbjL3qfGsybo';
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent';
+const SITE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://hen-6.github.io/Xuan2'
+  : 'http://localhost:3000';
+
+const OPENROUTER_API_KEY = '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';
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -27,48 +30,28 @@ export default function Home() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${GEMINI_API_URL}?key=${GOOGLE_API_KEY}`, {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+          'HTTP-Referer': SITE_URL,
+          'X-Title': 'Xuan2 Chat',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          contents: [...messages, userMessage].map(msg => ({
-            role: msg.role === 'user' ? 'user' : 'model',
-            parts: [{
-              text: msg.content
-            }]
+          model: 'deepseek/deepseek-r1-0528:free',
+          messages: [...messages, userMessage].map(msg => ({
+            role: msg.role,
+            content: msg.content
           })),
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 1000,
-          },
-          safetySettings: [
-            {
-              category: "HARM_CATEGORY_HARASSMENT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            },
-            {
-              category: "HARM_CATEGORY_HATE_SPEECH",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            },
-            {
-              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            },
-            {
-              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            }
-          ]
+          temperature: 0.7,
+          max_tokens: 1000
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: { message: 'Failed to parse error response' } }));
-        console.error('Gemini API Error:', errorData);
+        console.error('OpenRouter API Error:', errorData);
         
         let errorMessage = 'Failed to get response from AI service';
         if (response.status === 401) {
@@ -83,14 +66,14 @@ export default function Home() {
       const data = await response.json();
       console.log('Received response:', data);
 
-      if (!data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+      if (!data?.choices?.[0]?.message?.content) {
         throw new Error('Invalid response format from AI service');
       }
 
       // Add AI response
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: data.candidates[0].content.parts[0].text
+        content: data.choices[0].message.content
       }]);
     } catch (error) {
       console.error('Error:', error);
@@ -143,7 +126,7 @@ export default function Home() {
               isLoading={isLoading}
             />
             <div className="mt-2 text-center text-xs text-muted-foreground">
-              Built with Next.js and OpenRouter AI
+              Built with Next.js and DeepSeek AI
             </div>
           </div>
         </div>
