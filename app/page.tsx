@@ -13,7 +13,7 @@ const SITE_URL = process.env.NODE_ENV === 'production'
   ? 'https://hen-6.github.io/Xuan2'
   : 'http://localhost:3000';
 
-const OPENROUTER_API_KEY = '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';
+const OPENROUTER_API_KEY = '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';
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -33,10 +33,10 @@ export default function Home() {
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
           'HTTP-Referer': SITE_URL,
-          'X-Title': 'Xuan2 Chat',
-          'Content-Type': 'application/json'
+          'X-Title': 'Xuan2 Chat'
         },
         body: JSON.stringify({
           model: 'deepseek/deepseek-r1-0528:free',
@@ -126,7 +126,7 @@ export default function Home() {
               isLoading={isLoading}
             />
             <div className="mt-2 text-center text-xs text-muted-foreground">
-              Built with Next.js and DeepSeek AI
+              Built with Next.js and OpenRouter AI
             </div>
           </div>
         </div>
